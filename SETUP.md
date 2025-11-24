@@ -262,8 +262,7 @@ After successful setup:
 1. Customize the UI/styling to match your brand
 2. Add additional features (analytics, QR codes, etc.)
 3. Implement rate limiting for API endpoints
-4. Add user authentication (optional)
-5. Set up monitoring and error tracking
+4. Set up monitoring and error tracking
 
 ## Support
 

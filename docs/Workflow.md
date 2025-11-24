@@ -422,8 +422,8 @@ Create `components/LinksTable.js`:
 - Columns: Code, URL, Clicks, Created, Last Clicked, Actions
 - Copy button for short URL
 - Delete button with confirmation
-- Sort by columns (optional)
-- Search/filter (optional)
+- Sort by columns
+- Search/filter
 - Empty state
 - Loading state
 - Mobile responsive (stacked or scrollable)
@@ -566,7 +566,7 @@ function LoadingSpinner() {
 - [ ] Red background (bg-red-50)
 - [ ] Red border
 - [ ] Clear text
-- [ ] Dismissible (optional)
+- [ ] Dismissible
 
 **Success Messages:**
 - [ ] Green background (bg-green-50)
