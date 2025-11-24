@@ -14,19 +14,22 @@ Build a URL shortener web application similar to bit.ly that allows users to sho
 
 ## Technology Stack
 
-### Backend Options
-- **Option 1:** Node.js + Express
-- **Option 2:** Next.js (Full-stack)
+### Framework
+- **Next.js 14+** (Full-stack with App Router)
 
-### Frontend
-- Plain CSS or Tailwind CSS (lightweight)
+### Styling
+- **Tailwind CSS** (Utility-first CSS framework)
 
 ### Database
-- PostgreSQL (Free: Neon, Supabase, Railway)
+- **PostgreSQL** via **Neon** (Free tier, serverless)
+  - Sign up at: https://neon.tech
+  - Free tier includes: 0.5 GB storage, 1 project
 
 ### Hosting
-- **Next.js:** Vercel
-- **Node/Express:** Render or Railway
+- **Vercel** (Free tier, optimal for Next.js)
+  - Automatic deployments from GitHub
+  - Environment variable management
+  - Built-in analytics
 
 ---
 
@@ -94,7 +97,7 @@ Build a URL shortener web application similar to bit.ly that allows users to sho
 {
   "code": "docs",
   "url": "https://example.com/very/long/url",
-  "shortUrl": "https://yourapp.com/docs",
+  "shortUrl": "https://yourapp.vercel.app/docs",
   "clicks": 0,
   "createdAt": "2025-01-15T10:30:00Z"
 }
@@ -181,6 +184,7 @@ CREATE TABLE links (
 );
 
 CREATE INDEX idx_code ON links(code);
+CREATE INDEX idx_created_at ON links(created_at DESC);
 ```
 
 ---
@@ -273,7 +277,7 @@ CREATE INDEX idx_code ON links(code);
 
 ---
 
-## Testing Requirements (Automated)
+## Testing Requirements
 
 ### Critical Tests
 1. ✓ `/healthz` returns 200
@@ -297,20 +301,26 @@ CREATE INDEX idx_code ON links(code);
 
 ## Environment Variables
 
+Create `.env.local`:
+```
+DATABASE_URL=postgresql://user:password@host.neon.tech/neondb?sslmode=require
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+NODE_ENV=development
+```
+
 Create `.env.example`:
 ```
-DATABASE_URL=postgresql://user:password@host:5432/database
-BASE_URL=https://yourapp.com
+DATABASE_URL=postgresql://user:password@host.neon.tech/database
+NEXT_PUBLIC_BASE_URL=https://yourapp.vercel.app
 NODE_ENV=production
-PORT=3000
 ```
 
 ---
 
 ## Deployment Checklist
 
-- [ ] Database schema created
-- [ ] Environment variables configured
+- [ ] Database schema created on Neon
+- [ ] Environment variables configured in Vercel
 - [ ] Health check endpoint working
 - [ ] All API endpoints tested
 - [ ] Redirects working with click tracking
@@ -329,10 +339,9 @@ PORT=3000
 - Clean, meaningful Git commits
 - Modular, well-organized code
 - Comprehensive error handling
-- Unit/integration tests
 - TypeScript usage
 - Rate limiting for API
-- Analytics dashboard
-- QR code generation
+- Analytics dashboard with charts
+- QR code generation for links
 - Link expiration feature
-- Custom domains support
+- Export links as CSV
