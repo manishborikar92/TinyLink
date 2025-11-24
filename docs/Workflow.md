@@ -3,30 +3,47 @@
 ## Phase 1: Setup & Planning (2-3 hours)
 
 ### Step 1.1: Environment Setup
-```bash
-# Choose your stack
-# Option A: Next.js
-npx create-next-app@latest tinylink --tailwind --app
 
-# Option B: Express
-mkdir tinylink && cd tinylink
-npm init -y
+```bash
+# Create Next.js project with App Router and Tailwind
+npx create-next-app@latest tinylink
+
+# When prompted:
+# ✓ TypeScript? → Yes (recommended)
+# ✓ ESLint? → Yes  
+# ✓ Tailwind CSS? → Yes
+# ✓ src/ directory? → No
+# ✓ App Router? → Yes
+# ✓ Customize import alias? → No
+
+cd tinylink
+
+# Install PostgreSQL client
+npm install pg
+
+# Initialize Git (if not already done)
+git init
 ```
 
 **Checklist:**
-- [ ] Project created
+- [ ] Next.js project created
+- [ ] Tailwind CSS configured
 - [ ] Git repository initialized
-- [ ] `.gitignore` configured
-- [ ] Dependencies installed
+- [ ] `.gitignore` includes `.env*.local`
+- [ ] PostgreSQL package installed
 
-### Step 1.2: Database Setup
+### Step 1.2: Database Setup (Neon)
+
 1. **Create Neon Account:**
    - Visit https://neon.tech
-   - Sign up (free tier)
-   - Create new project "tinylink"
+   - Sign up with GitHub (free tier)
+   - Create new project: "tinylink"
+   - Select closest region
    - Copy connection string
 
-2. **Create Schema:**
+2. **Create Database Schema:**
+   
+   In Neon SQL Editor, run:
    ```sql
    CREATE TABLE links (
      id SERIAL PRIMARY KEY,
@@ -38,69 +55,133 @@ npm init -y
    );
    
    CREATE INDEX idx_code ON links(code);
+   CREATE INDEX idx_created_at ON links(created_at DESC);
    ```
 
 3. **Configure Environment:**
-   ```bash
-   # .env.local or .env
-   DATABASE_URL=your_neon_connection_string
-   BASE_URL=http://localhost:3000
+   
+   Create `.env.local`:
+   ```env
+   DATABASE_URL=postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+   NEXT_PUBLIC_BASE_URL=http://localhost:3000
+   NODE_ENV=development
+   ```
+   
+   Create `.env.example`:
+   ```env
+   DATABASE_URL=postgresql://user:password@host.neon.tech/database
+   NEXT_PUBLIC_BASE_URL=https://yourapp.vercel.app
+   NODE_ENV=production
    ```
 
 **Checklist:**
 - [ ] Neon account created
-- [ ] Database created
-- [ ] Schema applied
-- [ ] Connection tested
-- [ ] Environment variables set
+- [ ] Database project created
+- [ ] Schema applied successfully
+- [ ] Connection string copied
+- [ ] `.env.local` configured
+- [ ] `.env.example` created
 
 ### Step 1.3: Project Structure
-Create folder structure and basic files:
 
+Create the folder structure:
+
+```bash
+mkdir -p lib components app/api/links/[code] app/api/healthz app/code/[code] app/[code]
+```
+
+Your structure should look like:
 ```
 tinylink/
-├── lib/              # Database & utilities
-├── components/       # React components
-├── app/             # Next.js pages & API routes
-└── public/          # Static assets
+├── app/
+│   ├── api/
+│   │   ├── links/
+│   │   │   ├── route.js
+│   │   │   └── [code]/
+│   │   │       └── route.js
+│   │   └── healthz/
+│   │       └── route.js
+│   ├── code/
+│   │   └── [code]/
+│   │       └── page.js
+│   ├── [code]/
+│   │   └── route.js
+│   ├── page.js
+│   ├── layout.js
+│   └── globals.css
+├── components/
+│   ├── LinkForm.js
+│   ├── LinksTable.js
+│   └── Header.js
+├── lib/
+│   ├── db.js
+│   └── utils.js
+└── public/
 ```
 
 **Checklist:**
 - [ ] Folders created
-- [ ] db.js configured
-- [ ] utils.js with validation functions
-- [ ] Basic layout component
+- [ ] Structure matches Next.js App Router conventions
+- [ ] Ready for implementation
 
 ---
 
 ## Phase 2: Backend Implementation (4-5 hours)
 
 ### Step 2.1: Database Connection
+
 Create `lib/db.js`:
 ```javascript
 import { Pool } from 'pg';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+pool.on('connect', () => {
+  console.log('✓ Connected to database');
+});
+
+pool.on('error', (err) => {
+  console.error('Database error:', err);
+  process.exit(-1);
 });
 
 export default pool;
 ```
 
-**Test connection:**
+**Test Connection:**
+
+Create a test file `test-db.js`:
 ```javascript
-// Test in API route or separate script
-const result = await pool.query('SELECT NOW()');
-console.log(result.rows[0]);
+import pool from './lib/db.js';
+
+(async () => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    console.log('✓ Database connected:', result.rows[0]);
+    process.exit(0);
+  } catch (err) {
+    console.error('✗ Database connection failed:', err);
+    process.exit(1);
+  }
+})();
 ```
 
+Run: `node test-db.js`
+
 **Checklist:**
-- [ ] Database connection established
-- [ ] Connection tested successfully
+- [ ] Database connection file created
+- [ ] Connection pool configured
+- [ ] Test connection successful
 - [ ] Error handling added
 
 ### Step 2.2: Utility Functions
+
 Create `lib/utils.js`:
 ```javascript
 export function generateRandomCode(length = 6) {
@@ -124,21 +205,35 @@ export function validateUrl(url) {
     return false;
   }
 }
+
+export function truncateUrl(url, maxLength = 50) {
+  return url.length > maxLength ? url.substring(0, maxLength) + '...' : url;
+}
+
+export function formatDate(dateString) {
+  if (!dateString) return 'Never';
+  return new Date(dateString).toLocaleString();
+}
 ```
 
-**Test utilities:**
+**Test Utilities:**
 ```javascript
-console.log(generateRandomCode()); // e.g., "aB3xY9"
+// In browser console or Node
+console.log(generateRandomCode()); // "aB3xY9"
 console.log(validateCode("abc123")); // true
+console.log(validateCode("ab")); // false (too short)
 console.log(validateUrl("https://example.com")); // true
+console.log(validateUrl("not-a-url")); // false
 ```
 
 **Checklist:**
-- [ ] Code generation function works
+- [ ] All utility functions created
+- [ ] Code generation works
 - [ ] Validation functions tested
 - [ ] Edge cases handled
 
 ### Step 2.3: Health Check Endpoint
+
 Create `app/api/healthz/route.js`:
 ```javascript
 import { NextResponse } from 'next/server';
@@ -153,170 +248,251 @@ export async function GET() {
       ok: true,
       version: '1.0',
       uptime: Math.floor((Date.now() - startTime) / 1000),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      database: 'connected'
     });
   } catch (error) {
-    return NextResponse.json({ ok: false }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, database: 'disconnected', error: error.message },
+      { status: 500 }
+    );
   }
 }
 ```
 
 **Test:**
+1. Start dev server: `npm run dev`
+2. Visit: http://localhost:3000/api/healthz
+3. Should return: `{"ok":true,"version":"1.0",...}`
+
+**Checklist:**
+- [ ] Endpoint returns 200 status
+- [ ] Database connectivity checked
+- [ ] Uptime tracked
+- [ ] Error handling works
+
+### Step 2.4: Create & List Links API
+
+Create `app/api/links/route.js`:
+
+**Implementation includes:**
+- POST handler for creating links
+- GET handler for listing all links
+- URL validation
+- Custom code validation
+- Random code generation with collision handling
+- Duplicate code error (409)
+- Proper error messages
+
+**Test POST:**
 ```bash
-curl http://localhost:3000/api/healthz
-# Expected: {"ok":true,"version":"1.0",...}
+curl -X POST http://localhost:3000/api/links \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://google.com","customCode":"google"}'
+```
+
+**Test GET:**
+```bash
+curl http://localhost:3000/api/links
 ```
 
 **Checklist:**
-- [ ] Endpoint returns 200
-- [ ] Database connectivity checked
-- [ ] Uptime tracked
-
-### Step 2.4: Create Link Endpoint
-Create `app/api/links/route.js`:
-
-**Checklist:**
-- [ ] POST /api/links implemented
+- [ ] POST creates link successfully
+- [ ] Returns 201 with correct response format
 - [ ] URL validation works
 - [ ] Custom code validation works
 - [ ] Random code generation works
-- [ ] Duplicate detection (409) works
-- [ ] Returns 201 with correct response
-- [ ] GET /api/links lists all links
+- [ ] Duplicate code returns 409
+- [ ] GET lists all links
+- [ ] Links ordered by created_at DESC
 
-### Step 2.5: Single Link Endpoint
+### Step 2.5: Single Link Operations
+
 Create `app/api/links/[code]/route.js`:
 
+**Implementation includes:**
+- GET handler for fetching single link
+- DELETE handler for removing link
+- 404 for non-existent codes
+- Proper error handling
+
+**Test GET:**
+```bash
+curl http://localhost:3000/api/links/google
+```
+
+**Test DELETE:**
+```bash
+curl -X DELETE http://localhost:3000/api/links/google
+```
+
 **Checklist:**
-- [ ] GET /api/links/:code returns link data
-- [ ] DELETE /api/links/:code removes link
-- [ ] Returns 404 for non-existent codes
+- [ ] GET returns link data
+- [ ] DELETE removes link
+- [ ] Both return 404 for missing codes
+- [ ] Success messages formatted correctly
 
 ### Step 2.6: Redirect Handler
+
 Create `app/[code]/route.js`:
 
+**Implementation includes:**
+- 302 redirect to original URL
+- Atomic transaction for click tracking
+- Increment clicks counter
+- Update last_clicked timestamp
+- 404 for missing codes
+- Race condition handling
+
+**Test:**
+```bash
+# Test redirect
+curl -I http://localhost:3000/google
+
+# Check click count increased
+curl http://localhost:3000/api/links/google
+```
+
 **Checklist:**
-- [ ] Redirect (302) works
+- [ ] Redirect (302) works correctly
 - [ ] Click count increments
-- [ ] Last clicked timestamp updates
-- [ ] Returns 404 for missing links
-- [ ] Transaction handles race conditions
+- [ ] last_clicked updates
+- [ ] Transaction ensures atomicity
+- [ ] 404 for non-existent codes
+- [ ] No race conditions
 
 ---
 
 ## Phase 3: Frontend Implementation (5-6 hours)
 
-### Step 3.1: Layout Component
-Create `app/layout.js`:
-```javascript
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <body>
-        <nav className="bg-blue-600 text-white p-4">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-2xl font-bold">TinyLink</h1>
-          </div>
-        </nav>
-        {children}
-      </body>
-    </html>
-  );
-}
-```
+### Step 3.1: Root Layout
+
+Update `app/layout.js`:
+
+**Features:**
+- Clean navigation header
+- Consistent styling
+- Proper metadata
+- Link to health check
 
 **Checklist:**
-- [ ] Header/navigation created
-- [ ] Consistent styling applied
-- [ ] Responsive layout
-
-### Step 3.2: Link Form Component
-Create `components/LinkForm.js`:
-
-**Features:**
-- [ ] URL input field
-- [ ] Custom code input (optional)
-- [ ] Submit button
-- [ ] Loading state during submission
-- [ ] Success message on creation
-- [ ] Error message display
-- [ ] Form reset after success
-- [ ] Inline validation
-- [ ] Disabled state during loading
-
-**States to handle:**
-- Idle
-- Loading (submitting)
-- Success
-- Error
-
-### Step 3.3: Links Table Component
-Create `components/LinksTable.js`:
-
-**Features:**
-- [ ] Display all links in table
-- [ ] Show: code, URL, clicks, last clicked, actions
-- [ ] Copy button for short URL
-- [ ] Delete button with confirmation
-- [ ] Sort by columns
-- [ ] Filter/search functionality
-- [ ] Empty state ("No links yet")
-- [ ] Loading state
-- [ ] Truncate long URLs
+- [ ] Header with app name
+- [ ] Status link to /api/healthz
+- [ ] Metadata configured
+- [ ] Tailwind applied
 - [ ] Mobile responsive
 
+### Step 3.2: Link Form Component
+
+Create `components/LinkForm.js`:
+
+**Features to implement:**
+- URL input field (required)
+- Custom code input (optional)
+- Client-side validation
+- Loading state during submission
+- Success message display
+- Error message display
+- Form reset after success
+- Disabled state while loading
+
+**States:**
+- `url` - URL input value
+- `customCode` - Custom code value
+- `loading` - Submission in progress
+- `error` - Error message
+- `success` - Success message
+
 **Checklist:**
-- [ ] Table renders correctly
-- [ ] Copy functionality works
-- [ ] Delete with confirmation works
-- [ ] Sorting implemented
-- [ ] Filter/search works
-- [ ] Mobile layout stacks properly
+- [ ] Form renders correctly
+- [ ] URL validation works
+- [ ] Custom code validation works
+- [ ] Loading state shows spinner
+- [ ] Success message displays
+- [ ] Error messages clear
+- [ ] Form resets after success
+- [ ] Callback triggers on success
+
+### Step 3.3: Links Table Component
+
+Create `components/LinksTable.js`:
+
+**Features to implement:**
+- Display all links in table
+- Columns: Code, URL, Clicks, Created, Last Clicked, Actions
+- Copy button for short URL
+- Delete button with confirmation
+- Sort by columns (optional)
+- Search/filter (optional)
+- Empty state
+- Loading state
+- Mobile responsive (stacked or scrollable)
+
+**Checklist:**
+- [ ] Table renders all links
+- [ ] Copy button works
+- [ ] Copy feedback (tooltip/notification)
+- [ ] Delete confirms before removing
+- [ ] Delete updates parent state
+- [ ] Empty state shows when no links
+- [ ] Long URLs truncated
+- [ ] Mobile layout works
+- [ ] All dates formatted properly
 
 ### Step 3.4: Dashboard Page
-Create `app/page.js`:
+
+Update `app/page.js`:
 
 **Features:**
-- [ ] Renders LinkForm
-- [ ] Renders LinksTable
-- [ ] Fetches links on mount
-- [ ] Handles loading state
-- [ ] Handles error state
-- [ ] Updates table after create/delete
-- [ ] Responsive layout
+- Fetch links on mount
+- Display LinkForm
+- Display LinksTable
+- Handle loading state
+- Handle error state
+- Refresh after create/delete
 
 **Checklist:**
 - [ ] Page loads without errors
-- [ ] Data fetches correctly
-- [ ] Components communicate properly
-- [ ] State management works
+- [ ] Links fetch automatically
+- [ ] Loading spinner shows
+- [ ] Error message displays on failure
+- [ ] LinkForm callback works
+- [ ] LinksTable delete callback works
+- [ ] UI updates properly
+- [ ] Mobile responsive
 
 ### Step 3.5: Stats Page
+
 Create `app/code/[code]/page.js`:
 
 **Features:**
-- [ ] Display single link details
-- [ ] Show full URL
-- [ ] Show click statistics
-- [ ] Show creation date
-- [ ] Show last clicked time
-- [ ] Copy short URL button
-- [ ] Back to dashboard link
-- [ ] Loading state
-- [ ] Error state (404)
+- Fetch single link stats
+- Display short URL with copy button
+- Display original URL
+- Display total clicks
+- Display created date
+- Display last clicked date
+- Back to dashboard link
+- Loading state
+- 404 error state
 
 **Checklist:**
-- [ ] Stats page accessible via /code/:code
-- [ ] Displays correct information
-- [ ] Handles non-existent codes
+- [ ] Stats page accessible
+- [ ] All data displays correctly
+- [ ] Copy button works
+- [ ] Back link navigates to dashboard
+- [ ] Loading state shows
+- [ ] 404 handles missing codes
 - [ ] Mobile responsive
+- [ ] URLs formatted properly
 
 ---
 
 ## Phase 4: Styling & UX Polish (2-3 hours)
 
-### Step 4.1: Tailwind Configuration
-Configure `tailwind.config.js`:
+### Step 4.1: Tailwind Customization
+
+Update `tailwind.config.js` if needed:
 ```javascript
 module.exports = {
   content: [
@@ -327,7 +503,6 @@ module.exports = {
     extend: {
       colors: {
         primary: '#3B82F6',
-        secondary: '#10B981',
       },
     },
   },
@@ -336,106 +511,83 @@ module.exports = {
 
 ### Step 4.2: Component Styling
 
-**Form Styling:**
+**Forms:**
 - [ ] Consistent input styles
 - [ ] Clear labels
-- [ ] Proper spacing
-- [ ] Focus states
-- [ ] Error states (red border)
-- [ ] Success states (green border)
+- [ ] Proper spacing (p-4, gap-4)
+- [ ] Focus states (ring-blue-500)
+- [ ] Error states (border-red-500)
+- [ ] Success states (border-green-500)
 
-**Button Styling:**
-- [ ] Primary button (blue)
-- [ ] Danger button (red)
-- [ ] Disabled state (gray)
-- [ ] Loading state (spinner)
+**Buttons:**
+- [ ] Primary: blue background
+- [ ] Danger: red background
+- [ ] Disabled: gray, cursor-not-allowed
+- [ ] Loading: show spinner
 - [ ] Hover effects
+- [ ] Consistent sizing (px-4 py-2)
 
-**Table Styling:**
-- [ ] Zebra striping
-- [ ] Hover row highlight
-- [ ] Proper padding
-- [ ] Border styling
-- [ ] Responsive breakpoints
+**Tables:**
+- [ ] Proper borders
+- [ ] Zebra striping (odd:bg-gray-50)
+- [ ] Hover highlight
+- [ ] Responsive padding
+- [ ] Mobile scrollable
 
 ### Step 4.3: Loading States
-Implement spinners/skeletons:
+
+Create loading spinner:
 ```javascript
 function LoadingSpinner() {
   return (
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
   );
 }
 ```
 
 **Checklist:**
 - [ ] Loading spinner component
-- [ ] Table skeleton loader
-- [ ] Form loading state
-- [ ] Page loading state
+- [ ] Used in dashboard
+- [ ] Used in stats page
+- [ ] Used in form submission
+- [ ] Smooth animations
 
 ### Step 4.4: Empty States
-```javascript
-function EmptyState() {
-  return (
-    <div className="text-center py-12">
-      <p className="text-gray-500 text-lg">No links created yet</p>
-      <p className="text-gray-400 mt-2">Create your first short link above</p>
-    </div>
-  );
-}
-```
 
 **Checklist:**
-- [ ] Empty table state
-- [ ] Empty search results
-- [ ] Clear messaging
+- [ ] "No links yet" message
+- [ ] Empty state in table
+- [ ] Clear, friendly messaging
+- [ ] Call to action visible
 
-### Step 4.5: Error States
-```javascript
-function ErrorMessage({ message }) {
-  return (
-    <div className="bg-red-50 border border-red-200 rounded-md p-4">
-      <p className="text-red-700">{message}</p>
-    </div>
-  );
-}
-```
+### Step 4.5: Error & Success States
 
-**Checklist:**
-- [ ] Form validation errors
-- [ ] API error messages
-- [ ] Network error handling
-- [ ] 404 error page
+**Error Messages:**
+- [ ] Red background (bg-red-50)
+- [ ] Red border
+- [ ] Clear text
+- [ ] Dismissible (optional)
 
-### Step 4.6: Success States
-```javascript
-function SuccessMessage({ message }) {
-  return (
-    <div className="bg-green-50 border border-green-200 rounded-md p-4">
-      <p className="text-green-700">✓ {message}</p>
-    </div>
-  );
-}
-```
+**Success Messages:**
+- [ ] Green background (bg-green-50)
+- [ ] Checkmark icon
+- [ ] Auto-dismiss after 3s
+- [ ] Smooth transitions
 
-**Checklist:**
-- [ ] Link created success
-- [ ] Link deleted success
-- [ ] Copy to clipboard success
+### Step 4.6: Responsive Design
 
-### Step 4.7: Responsive Design
-Test breakpoints:
-- [ ] Mobile (< 640px)
-- [ ] Tablet (640px - 1024px)
-- [ ] Desktop (> 1024px)
+**Test at breakpoints:**
+- [ ] Mobile (< 640px): stacked layout
+- [ ] Tablet (640px - 1024px): adaptive
+- [ ] Desktop (> 1024px): full width
 
 **Mobile considerations:**
-- [ ] Stack form fields vertically
-- [ ] Full-width buttons
+- [ ] Full-width inputs
+- [ ] Stacked form fields
+- [ ] Large touch targets (min 44px)
+- [ ] Readable font sizes (16px+)
 - [ ] Scrollable table
-- [ ] Larger touch targets (44px min)
-- [ ] Readable font sizes (16px min)
+- [ ] Hamburger menu (if needed)
 
 ---
 
@@ -443,260 +595,286 @@ Test breakpoints:
 
 ### Step 5.1: Manual Testing
 
-**Create Link Tests:**
-- [ ] Create link with custom code
-- [ ] Create link without custom code
-- [ ] Try duplicate code (should fail with 409)
-- [ ] Try invalid URL (should show error)
-- [ ] Try invalid code format (should show error)
-- [ ] Verify link appears in table
+**Create Link:**
+- [ ] With custom code
+- [ ] Without custom code
+- [ ] Duplicate code (409 error)
+- [ ] Invalid URL (validation error)
+- [ ] Invalid code format (validation error)
+- [ ] Very long URL
+- [ ] Special characters in URL
 
-**Redirect Tests:**
-- [ ] Visit /{code} and verify redirect
-- [ ] Check if clicks increment
-- [ ] Verify last_clicked updates
-- [ ] Try non-existent code (404)
+**Redirect:**
+- [ ] Visit /{code} redirects
+- [ ] Click count increases
+- [ ] last_clicked updates
+- [ ] Non-existent code shows 404
+- [ ] Multiple rapid clicks
 
-**Delete Tests:**
-- [ ] Delete a link
-- [ ] Verify it's removed from table
-- [ ] Try visiting deleted code (404)
+**Delete:**
+- [ ] Delete removes from table
+- [ ] Deleted code returns 404
+- [ ] Confirmation works
+- [ ] Can't delete twice
 
-**Stats Page Tests:**
-- [ ] View stats for existing link
-- [ ] Try non-existent code (404)
-- [ ] Verify all data displays correctly
+**Stats Page:**
+- [ ] Shows correct data
+- [ ] Copy button works
+- [ ] Back button works
+- [ ] 404 for missing code
+- [ ] Mobile responsive
 
-**UI/UX Tests:**
+**UI/UX:**
 - [ ] All buttons work
-- [ ] Copy buttons work
-- [ ] Forms validate properly
+- [ ] Forms validate
 - [ ] Loading states show
-- [ ] Error messages display
-- [ ] Success messages display
-- [ ] Mobile layout works
-- [ ] Table sorting/filtering works
+- [ ] Error messages clear
+- [ ] Success feedback visible
+- [ ] Mobile navigation works
 
-### Step 5.2: API Testing with curl
+### Step 5.2: API Testing Script
 
-Create test script `test-api.sh`:
+Create `test-api.sh`:
 ```bash
 #!/bin/bash
 
-echo "Testing Health Check..."
-curl http://localhost:3000/api/healthz
+BASE_URL="http://localhost:3000"
 
-echo "\nTesting Create Link..."
-curl -X POST http://localhost:3000/api/links \
+echo "1. Health Check"
+curl $BASE_URL/api/healthz
+
+echo "\n\n2. Create Link"
+curl -X POST $BASE_URL/api/links \
   -H "Content-Type: application/json" \
   -d '{"url":"https://google.com","customCode":"test123"}'
 
-echo "\nTesting Get All Links..."
-curl http://localhost:3000/api/links
+echo "\n\n3. Get All Links"
+curl $BASE_URL/api/links
 
-echo "\nTesting Get Single Link..."
-curl http://localhost:3000/api/links/test123
+echo "\n\n4. Get Single Link"
+curl $BASE_URL/api/links/test123
 
-echo "\nTesting Redirect..."
-curl -I http://localhost:3000/test123
+echo "\n\n5. Test Redirect"
+curl -I $BASE_URL/test123
 
-echo "\nTesting Delete..."
-curl -X DELETE http://localhost:3000/api/links/test123
+echo "\n\n6. Delete Link"
+curl -X DELETE $BASE_URL/api/links/test123
 
-echo "\nTesting 404..."
-curl http://localhost:3000/test123
+echo "\n\n7. Verify 404"
+curl $BASE_URL/test123
 ```
 
+Run: `chmod +x test-api.sh && ./test-api.sh`
+
 **Checklist:**
-- [ ] All API endpoints respond correctly
-- [ ] Status codes are correct
+- [ ] All endpoints respond
+- [ ] Status codes correct
 - [ ] Response formats match spec
-- [ ] Error handling works
+- [ ] Errors handled properly
 
 ### Step 5.3: Browser Testing
-Test in multiple browsers:
+
+**Test in:**
 - [ ] Chrome
 - [ ] Firefox
 - [ ] Safari
-- [ ] Mobile Safari
-- [ ] Mobile Chrome
+- [ ] Mobile Safari (iOS)
+- [ ] Mobile Chrome (Android)
 
 ### Step 5.4: Edge Cases
-- [ ] Very long URLs (> 2000 chars)
-- [ ] Special characters in URLs
-- [ ] Unicode characters in custom codes
-- [ ] Rapid consecutive clicks
-- [ ] Network errors
-- [ ] Database connection failures
+
+- [ ] Very long URLs (2000+ chars)
+- [ ] Unicode in URLs
+- [ ] URLs with special characters
+- [ ] Multiple simultaneous requests
+- [ ] Network timeouts
+- [ ] Database disconnection
+- [ ] Invalid JSON payloads
 
 ---
 
 ## Phase 6: Deployment (2-3 hours)
 
-### Step 6.1: Pre-Deployment Checklist
-- [ ] All features working locally
+### Step 6.1: Pre-Deployment
+
+**Checklist:**
+- [ ] All features work locally
+- [ ] No console errors
 - [ ] Environment variables documented
-- [ ] .env.example created
-- [ ] Database migrations ready
-- [ ] README.md written
-- [ ] Git commits clean and meaningful
-- [ ] No sensitive data in repo
+- [ ] `.env.example` created
+- [ ] `.env.local` in `.gitignore`
+- [ ] README written
+- [ ] Clean git history
 
-### Step 6.2: Deploy to Vercel (Next.js)
+### Step 6.2: Push to GitHub
 
-1. **Push to GitHub:**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
+```bash
+git add .
+git commit -m "Complete TinyLink implementation"
+git branch -M main
+git remote add origin https://github.com/yourusername/tinylink.git
+git push -u origin main
+```
 
-2. **Connect to Vercel:**
+**Checklist:**
+- [ ] Repository created
+- [ ] Code pushed
+- [ ] Repository set to public
+- [ ] README visible
+
+### Step 6.3: Deploy to Vercel
+
+1. **Sign Up / Login:**
    - Go to https://vercel.com
+   - Sign up with GitHub
+
+2. **Import Project:**
    - Click "New Project"
-   - Import GitHub repository
+   - Select repository
    - Framework: Next.js (auto-detected)
 
-3. **Configure Environment Variables:**
-   - Add `DATABASE_URL`
-   - Add `BASE_URL` (use Vercel URL)
+3. **Configure:**
+   - Build Command: (auto)
+   - Output Directory: (auto)
+   - Install Command: (auto)
 
-4. **Deploy:**
+4. **Environment Variables:**
+   - Add `DATABASE_URL` from Neon
+   - `NEXT_PUBLIC_BASE_URL` will be auto-set
+
+5. **Deploy:**
    - Click "Deploy"
-   - Wait for build to complete
-   - Test deployed URL
+   - Wait 2-3 minutes
 
 **Checklist:**
 - [ ] Deployment successful
+- [ ] Site accessible
 - [ ] Environment variables set
-- [ ] Health check works
-- [ ] All routes accessible
-- [ ] Database connected
-
-### Step 6.3: Deploy to Render (Express)
-
-1. **Push to GitHub**
-
-2. **Create Web Service:**
-   - Go to https://render.com
-   - New → Web Service
-   - Connect repository
-   - Name: tinylink
-   - Environment: Node
-   - Build: `npm install`
-   - Start: `node server.js`
-
-3. **Add Environment Variables**
-
-4. **Deploy**
+- [ ] Domain assigned
 
 ### Step 6.4: Post-Deployment Testing
-- [ ] Health check endpoint works
+
+**Test on production:**
+- [ ] Health check works
 - [ ] Create link works
 - [ ] Redirect works
+- [ ] Stats page works
 - [ ] Delete works
-- [ ] UI loads correctly
-- [ ] Database persistence works
+- [ ] Mobile works
 - [ ] No console errors
-- [ ] Mobile responsive
+
+**URLs to test:**
+- https://your-app.vercel.app
+- https://your-app.vercel.app/api/healthz
+- https://your-app.vercel.app/api/links
 
 ---
 
 ## Phase 7: Documentation & Submission (1-2 hours)
 
-### Step 7.1: README.md
-Create comprehensive README:
+### Step 7.1: Update README.md
 
 ```markdown
 # TinyLink - URL Shortener
 
-## Live Demo
-- **App:** https://your-app.vercel.app
-- **Health Check:** https://your-app.vercel.app/healthz
+## 🔗 Live Demo
+**App:** https://your-app.vercel.app
+**Health Check:** https://your-app.vercel.app/api/healthz
 
-## Features
-- Create short links with custom codes
-- Track click statistics
-- Manage all links from dashboard
-- View detailed stats per link
-- Mobile responsive design
+## ✨ Features
+- Create short links with custom or random codes
+- Track click statistics in real-time
+- View detailed analytics per link
+- Responsive design for all devices
+- Fast redirects with PostgreSQL
 
-## Tech Stack
-- Next.js 14 (App Router)
-- PostgreSQL (Neon)
-- Tailwind CSS
-- Deployed on Vercel
+## 🛠 Tech Stack
+- **Framework:** Next.js 14 (App Router)
+- **Database:** PostgreSQL (Neon)
+- **Styling:** Tailwind CSS
+- **Hosting:** Vercel
 
-## Local Setup
-1. Clone repository
-2. Install dependencies: `npm install`
-3. Copy `.env.example` to `.env.local`
-4. Add your database URL
-5. Run: `npm run dev`
-6. Visit: http://localhost:3000
+## 🚀 Local Setup
+1. Clone: `git clone https://github.com/yourusername/tinylink.git`
+2. Install: `npm install`
+3. Configure: Copy `.env.example` to `.env.local` and add your DATABASE_URL
+4. Run: `npm run dev`
+5. Open: http://localhost:3000
 
-## API Endpoints
-- `POST /api/links` - Create link
+## 📡 API Endpoints
+- `POST /api/links` - Create short link
 - `GET /api/links` - List all links
 - `GET /api/links/:code` - Get link stats
 - `DELETE /api/links/:code` - Delete link
-- `GET /:code` - Redirect to URL
-- `GET /healthz` - Health check
+- `GET /:code` - Redirect to original URL
+- `GET /api/healthz` - Health check
 
-## Environment Variables
+## 📝 Environment Variables
 See `.env.example` for required variables.
+
+## 📄 License
+MIT
 ```
 
 **Checklist:**
-- [ ] README written
+- [ ] Live URLs added
+- [ ] Features listed
 - [ ] Setup instructions clear
-- [ ] Live URLs included
-- [ ] Features documented
+- [ ] API documented
 - [ ] Tech stack listed
 
-### Step 7.2: Video Walkthrough
-Record 5-10 minute video:
+### Step 7.2: Record Video Walkthrough
 
-**Structure:**
-1. **Introduction (30s)**
+**Structure (5-10 minutes):**
+
+1. **Intro (30s):**
    - Your name
    - Project overview
 
-2. **Live Demo (2-3 min)**
+2. **Live Demo (2-3 min):**
    - Show deployed app
-   - Create a link
-   - Test redirect
-   - View stats
-   - Delete link
-   - Mobile view
+   - Create link with custom code
+   - Create link with random code
+   - Test redirect (open in new tab)
+   - View stats page
+   - Delete a link
+   - Show mobile view
 
-3. **Code Walkthrough (3-5 min)**
-   - Project structure
-   - Database schema
-   - API routes
-   - Key components
-   - Deployment setup
+3. **Code Walkthrough (3-5 min):**
+   - Show project structure
+   - Explain database schema
+   - Walk through API routes
+   - Show key components
+   - Explain redirect logic
+   - Show deployment config
 
-4. **Challenges & Solutions (1-2 min)**
-   - What was difficult
-   - How you solved it
+4. **Wrap-up (1 min):**
+   - Challenges faced
+   - How you solved them
    - What you learned
 
 **Tools:**
-- Loom (https://loom.com)
-- OBS Studio
-- QuickTime (Mac)
-- Zoom recording
+- **Loom:** https://loom.com (easiest)
+- **OBS Studio:** Free, professional
+- **Zoom:** Record meeting
+
+**Tips:**
+- Clear audio (use good mic)
+- Readable screen resolution
+- Prepare talking points
+- Show, don't just tell
+- Keep it under 10 minutes
 
 **Checklist:**
 - [ ] Video recorded
 - [ ] Audio clear
 - [ ] Screen readable
-- [ ] Uploaded to YouTube/Loom
+- [ ] Uploaded (YouTube/Loom)
 - [ ] Link accessible
 
 ### Step 7.3: Final Submission
-Create submission document with:
+
+**Prepare submission with:**
 
 1. **Live URL:**
    - https://your-app.vercel.app
@@ -707,7 +885,7 @@ Create submission document with:
 3. **Video URL:**
    - https://loom.com/share/your-video
 
-4. **LLM Transcript URL:**
+4. **LLM Transcript URL (if used):**
    - https://chat.openai.com/share/your-chat
 
 **Final Checklist:**
@@ -715,17 +893,19 @@ Create submission document with:
 - [ ] GitHub repo public
 - [ ] README complete
 - [ ] Video accessible
-- [ ] Code clean and commented
-- [ ] No API keys committed
-- [ ] .env.example included
+- [ ] Code clean
+- [ ] No secrets in code
+- [ ] `.env.example` included
 - [ ] All features working
+- [ ] Mobile responsive
+- [ ] No console errors
 
 ---
 
-## Time Estimates Summary
+## Time Estimates
 
-| Phase | Task | Time |
-|-------|------|------|
+| Phase | Tasks | Time |
+|-------|-------|------|
 | 1 | Setup & Planning | 2-3h |
 | 2 | Backend Implementation | 4-5h |
 | 3 | Frontend Implementation | 5-6h |
@@ -735,55 +915,102 @@ Create submission document with:
 | 7 | Documentation | 1-2h |
 | **Total** | | **18-25h** |
 
-**Tip:** Spread over 2-3 days for best results.
-
 ---
 
-## Daily Schedule Suggestion
+## Recommended Schedule
 
 ### Day 1 (8-10 hours)
-- Morning: Setup + Database + Backend APIs
-- Afternoon: Frontend components + Dashboard
-- Evening: Stats page + Basic styling
+**Morning (4h):**
+- Setup project
+- Configure database
+- Build backend APIs
+
+**Afternoon (4h):**
+- Create components
+- Build dashboard
+- Implement form
+
+**Evening (2h):**
+- Stats page
+- Basic styling
 
 ### Day 2 (6-8 hours)
-- Morning: UX polish + Responsive design
-- Afternoon: Testing + Bug fixes
-- Evening: Deployment
+**Morning (3h):**
+- Polish UI
+- Responsive design
+- Loading states
 
-### Day 3 (2-4 hours)
-- Morning: Final testing + Documentation
-- Afternoon: Video recording + Submission
+**Afternoon (3h):**
+- Testing
+- Bug fixes
+- Deployment
+
+**Evening (2h):**
+- Documentation
+- Video recording
 
 ---
 
-## Troubleshooting Guide
+## Troubleshooting
 
-### "Database connection failed"
+### Database Issues
+**Problem:** Connection fails
+**Solution:**
 - Check DATABASE_URL format
-- Verify SSL settings
-- Test connection with psql
-- Check Neon IP allowlist
+- Verify `?sslmode=require`
+- Test with: `psql $DATABASE_URL`
+- Check Neon dashboard status
 
-### "Redirect not working"
-- Verify route handler path
-- Check database query
-- Test with curl
-- Check for errors in logs
+### Redirect Issues
+**Problem:** 404 on /{code}
+**Solution:**
+- Verify `app/[code]/route.js` exists
+- Check database has the code
+- Test API endpoint first
+- Check browser network tab
 
-### "Duplicate key error"
-- Check uniqueness constraint
-- Verify code validation
-- Test collision handling
-
-### "Build fails on Vercel"
-- Check all imports
-- Verify environment variables
+### Build Errors
+**Problem:** Vercel build fails
+**Solution:**
+- Test locally: `npm run build`
+- Check all imports correct
+- Verify env vars set
 - Review build logs
-- Test build locally
 
-### "404 on deployed app"
-- Check route definitions
-- Verify Next.js App Router structure
-- Review deployment logs
-- Test locally with `npm run build`
+### Environment Variables
+**Problem:** Vars not working
+**Solution:**
+- Prefix with `NEXT_PUBLIC_` for client
+- Restart dev server
+- Redeploy on Vercel
+- Check Vercel dashboard
+
+---
+
+## Success Criteria
+
+✅ **Functionality:**
+- All API endpoints work
+- Redirects increment clicks
+- Stats display correctly
+- Delete works properly
+
+✅ **UI/UX:**
+- Professional design
+- Responsive layout
+- Clear error messages
+- Loading states
+
+✅ **Code Quality:**
+- Clean, organized code
+- Proper error handling
+- Meaningful commits
+- Good README
+
+✅ **Deployment:**
+- Live on Vercel
+- Database connected
+- No errors
+- Fast performance
+
+Good luck! 🚀
