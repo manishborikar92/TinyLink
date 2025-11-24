@@ -712,7 +712,7 @@ Run: `chmod +x test-api.sh && ./test-api.sh`
 git add .
 git commit -m "Complete TinyLink implementation"
 git branch -M main
-git remote add origin https://github.com/yourusername/tinylink.git
+git remote add origin https://github.com/manishborikar92/tinylink.git
 git push -u origin main
 ```
 
@@ -795,7 +795,7 @@ git push -u origin main
 - **Hosting:** Vercel
 
 ## 🚀 Local Setup
-1. Clone: `git clone https://github.com/yourusername/tinylink.git`
+1. Clone: `git clone https://github.com/manishborikar92/tinylink.git`
 2. Install: `npm install`
 3. Configure: Copy `.env.example` to `.env.local` and add your DATABASE_URL
 4. Run: `npm run dev`
@@ -880,7 +880,7 @@ MIT
    - https://your-app.vercel.app
 
 2. **GitHub URL:**
-   - https://github.com/yourusername/tinylink
+   - https://github.com/manishborikar92/tinylink
 
 3. **Video URL:**
    - https://loom.com/share/your-video
