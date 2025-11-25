@@ -3,6 +3,7 @@
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import AmbientBackground from '@/components/AmbientBackground';
+import Navigation from '@/components/Navigation';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -23,6 +24,14 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AmbientBackground />
           <div className="relative min-h-screen flex flex-col">
+            {/* Global Navigation */}
+            <header className="sticky top-0 z-50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <Navigation />
+              </div>
+            </header>
+            
+            {/* Page Content */}
             {children}
           </div>
         </ThemeProvider>
