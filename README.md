@@ -4,8 +4,8 @@ A modern, production-ready URL shortener built with Next.js 14, TypeScript, and 
 
 ## 🔗 Live Demo
 
-**App:** [Your deployment URL]  
-**Health Check:** [Your deployment URL]/api/healthz
+**App:** https://tinylink-live.vercel.app/  
+**Health Check:** https://tinylink-live.vercel.app/api/healthz
 
 ## ✨ Features
 
@@ -36,8 +36,8 @@ A modern, production-ready URL shortener built with Next.js 14, TypeScript, and 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/manishborikar92/tinylink.git
-cd tinylink
+git clone https://github.com/manishborikar92/TinyLink.git
+cd TinyLink
 ```
 
 2. Install dependencies:
@@ -114,7 +114,7 @@ curl -X DELETE http://localhost:3000/api/links/example
 ## 📁 Project Structure
 
 ```
-tinylink/
+TinyLink/
 ├── src/
 │   ├── app/
 │   │   ├── api/
