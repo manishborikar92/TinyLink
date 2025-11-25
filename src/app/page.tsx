@@ -44,42 +44,40 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            URL Shortener Dashboard
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            Create short links and track their performance
-          </p>
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+      {/* Header */}
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+          URL Shortener Dashboard
+        </h1>
+        <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400">
+          Create short links and track their performance
+        </p>
+      </div>
+
+      {/* Link Form */}
+      <LinkForm onLinkCreated={handleLinkCreated} />
+
+      {/* Error Message */}
+      {error && (
+        <div className="mt-4 sm:mt-6 p-4 glass-panel rounded-xl border-red-300 dark:border-red-800">
+          <p className="text-sm sm:text-base text-red-700 dark:text-red-400">{error}</p>
         </div>
+      )}
 
-        {/* Link Form */}
-        <LinkForm onLinkCreated={handleLinkCreated} />
-
-        {/* Error Message */}
-        {error && (
-          <div className="mt-4 sm:mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm sm:text-base text-red-700">{error}</p>
-          </div>
-        )}
-
-        {/* Loading State */}
-        {loading ? (
-          <div className="mt-6 sm:mt-8 flex flex-col items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" aria-label="Loading"></div>
-            <p className="mt-4 text-sm sm:text-base text-gray-600">Loading links...</p>
-          </div>
-        ) : (
-          <LinksTable 
-            links={links} 
-            onLinkDeleted={handleLinkDeleted}
-            onRefresh={fetchLinks}
-          />
-        )}
-      </main>
-    </div>
+      {/* Loading State */}
+      {loading ? (
+        <div className="mt-6 sm:mt-8 flex flex-col items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" aria-label="Loading"></div>
+          <p className="mt-4 text-sm sm:text-base text-zinc-600 dark:text-zinc-400">Loading links...</p>
+        </div>
+      ) : (
+        <LinksTable 
+          links={links} 
+          onLinkDeleted={handleLinkDeleted}
+          onRefresh={fetchLinks}
+        />
+      )}
+    </main>
   );
 }

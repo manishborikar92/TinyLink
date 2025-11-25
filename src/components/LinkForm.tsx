@@ -49,8 +49,8 @@ export default function LinkForm({ onLinkCreated }: LinkFormProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
-      <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
+    <div className="glass-panel rounded-2xl p-4 sm:p-6 lg:p-8">
+      <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">
         Create Short Link
       </h2>
       
@@ -59,7 +59,7 @@ export default function LinkForm({ onLinkCreated }: LinkFormProps) {
         <div>
           <label 
             htmlFor="url" 
-            className="block text-sm sm:text-base font-medium text-gray-700 mb-2"
+            className="block text-sm sm:text-base font-medium text-zinc-700 dark:text-zinc-300 mb-2"
           >
             Original URL *
           </label>
@@ -71,7 +71,7 @@ export default function LinkForm({ onLinkCreated }: LinkFormProps) {
             placeholder="https://example.com/very/long/url"
             required
             disabled={loading}
-            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+            className="w-full px-4 py-3 text-base glass-subtle rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
             aria-required="true"
             aria-invalid={error ? 'true' : 'false'}
           />
@@ -81,7 +81,7 @@ export default function LinkForm({ onLinkCreated }: LinkFormProps) {
         <div>
           <label 
             htmlFor="customCode" 
-            className="block text-sm sm:text-base font-medium text-gray-700 mb-2"
+            className="block text-sm sm:text-base font-medium text-zinc-700 dark:text-zinc-300 mb-2"
           >
             Custom Code (optional)
           </label>
@@ -93,10 +93,10 @@ export default function LinkForm({ onLinkCreated }: LinkFormProps) {
             placeholder="mycode (6-8 alphanumeric)"
             pattern="[A-Za-z0-9]{6,8}"
             disabled={loading}
-            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+            className="w-full px-4 py-3 text-base glass-subtle rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
             aria-describedby="customCode-help"
           />
-          <p id="customCode-help" className="mt-2 text-xs sm:text-sm text-gray-500">
+          <p id="customCode-help" className="mt-2 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             Leave empty to generate a random code
           </p>
         </div>
@@ -104,22 +104,22 @@ export default function LinkForm({ onLinkCreated }: LinkFormProps) {
         {/* Error Message */}
         {error && (
           <div 
-            className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg"
+            className="p-3 sm:p-4 glass-panel rounded-xl border-red-300 dark:border-red-800"
             role="alert"
             aria-live="polite"
           >
-            <p className="text-sm sm:text-base text-red-700">{error}</p>
+            <p className="text-sm sm:text-base text-red-700 dark:text-red-400">{error}</p>
           </div>
         )}
 
         {/* Success Message */}
         {success && (
           <div 
-            className="p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg"
+            className="p-3 sm:p-4 glass-panel rounded-xl border-green-300 dark:border-green-800"
             role="status"
             aria-live="polite"
           >
-            <p className="text-sm sm:text-base text-green-700">✓ {success}</p>
+            <p className="text-sm sm:text-base text-green-700 dark:text-green-400">✓ {success}</p>
           </div>
         )}
 
@@ -127,7 +127,7 @@ export default function LinkForm({ onLinkCreated }: LinkFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full px-6 py-3 sm:py-4 text-base sm:text-lg bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors min-h-[48px]"
+          className="w-full px-6 py-3 sm:py-4 text-base sm:text-lg bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[48px] shadow-lg"
           aria-busy={loading}
         >
           {loading ? (

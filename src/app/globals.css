@@ -1,21 +1,75 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@layer base {
+  :root {
+    /* Light Mode - Premium Zinc Palette */
+    --background: #f4f4f5; /* Zinc-100 */
+    --foreground: #18181b; /* Zinc-900 */
+    
+    /* Glass Variables */
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-surface: rgba(255, 255, 255, 0.7);
+  }
+
+  .dark {
+    /* Dark Mode - Smoked Glass */
+    --background: #09090b; /* Zinc-950 */
+    --foreground: #f4f4f5; /* Zinc-100 */
+    
+    /* Glass Variables */
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-surface: rgba(24, 24, 27, 0.6); /* Zinc-900 with opacity */
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  
+  /* Glass colors */
+  --color-glass-border: var(--glass-border);
+  --color-glass-surface: var(--glass-surface);
+  
+  /* Blob animation */
+  --animate-blob: blob 10s infinite;
+  
+  @keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer utilities {
+  /* The Main Glass Utility */
+  .glass-panel {
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* A subtler glass for secondary items */
+  .glass-subtle {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--glass-surface) 50%, transparent);
+    border: 1px solid color-mix(in srgb, var(--glass-border) 50%, transparent);
+  }
+  
+  /* Blob animation utility */
+  .animate-blob {
+    animation: blob 10s infinite;
+  }
+  
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  
+  .animation-delay-4000 {
+    animation-delay: 4s;
   }
 }
 
@@ -23,6 +77,10 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 300ms, color 300ms;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* Enhanced focus styles for accessibility */
@@ -45,32 +103,4 @@ html {
     min-height: 44px;
     min-width: 44px;
   }
-}
-
-/* Improve text readability */
-body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-/* Responsive table utilities */
-@media (max-width: 768px) {
-  .table-responsive {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Loading spinner animation */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
 }
