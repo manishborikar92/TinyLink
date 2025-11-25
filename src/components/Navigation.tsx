@@ -17,12 +17,12 @@ export default function Navigation() {
           
           {/* Right Side Actions */}
           <div className="flex items-center gap-3 sm:gap-4">
-            {/* Status Link - Desktop */}
+            {/* Status Link */}
             <a 
               href="/api/healthz" 
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:block text-xs font-medium px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-xs font-medium px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Status
             </a>
