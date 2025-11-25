@@ -12,7 +12,7 @@
 
 **Script:**
 
-"Hi, I'm [Your Name], and today I'm going to walk you through TinyLink - a production-ready URL shortener application I built from scratch.
+"Hi, I'm Manish Borikar, and today I'm going to walk you through TinyLink - a production-ready URL shortener application I built from scratch.
 
 TinyLink is a full-stack web application that allows users to create short, memorable links with custom codes, track click statistics in real-time, and manage their links through a modern, responsive interface.
 
@@ -412,7 +412,7 @@ Thank you for watching! If you have any questions about the implementation or wa
 - [ ] Test all features work on deployed version
 - [ ] Clear database of test data (or prepare clean test data)
 - [ ] Prepare example URLs to shorten:
-  - https://github.com/yourusername/some-very-long-repository-name
+  - https://github.com/manishborikar92/TinyLink
   - https://www.example.com/another/very/long/url/path
   - https://docs.example.com/documentation/getting-started
 - [ ] Have custom codes ready: "github", "demo", "test"
@@ -548,9 +548,9 @@ Lead with:
 ```
 TinyLink - A modern URL shortener built with Next.js 16, TypeScript, and PostgreSQL
 
-🔗 Live Demo: https://your-app.vercel.app
-💻 GitHub: https://github.com/manishborikar92/tinylink
-📧 Contact: your.email@example.com
+🔗 Live Demo: https://tinylink-live.vercel.app
+💻 GitHub: https://github.com/manishborikar92/TinyLink
+📧 Contact: manishborikar92@gmail.com
 
 ⏱️ Timestamps:
 0:00 - Introduction
