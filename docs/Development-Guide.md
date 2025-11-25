@@ -9,17 +9,18 @@
 npx create-next-app@latest tinylink
 
 # When prompted, select:
-# ✓ TypeScript? → Yes (recommended) or No
+# ✓ TypeScript? → Yes
 # ✓ ESLint? → Yes
 # ✓ Tailwind CSS? → Yes
-# ✓ src/ directory? → No
+# ✓ src/ directory? → Yes
 # ✓ App Router? → Yes
-# ✓ Customize default import alias? → No
+# ✓ Customize default import alias? → No (@/ for src/)
 
 cd tinylink
 
-# Install PostgreSQL client
-npm install pg
+# Install dependencies
+npm install pg dotenv
+npm install -D @types/pg
 ```
 
 ---
@@ -77,45 +78,59 @@ NODE_ENV=production
 
 ```
 tinylink/
-├── app/
-│   ├── api/
-│   │   ├── links/
-│   │   │   ├── route.js          # GET, POST /api/links
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── links/
+│   │   │   │   ├── route.ts          # GET, POST /api/links
+│   │   │   │   └── [code]/
+│   │   │   │       └── route.ts      # GET, DELETE /api/links/:code
+│   │   │   └── healthz/
+│   │   │       └── route.ts          # GET /healthz
+│   │   ├── code/
 │   │   │   └── [code]/
-│   │   │       └── route.js      # GET, DELETE /api/links/:code
-│   │   └── healthz/
-│   │       └── route.js          # GET /healthz
-│   ├── code/
-│   │   └── [code]/
-│   │       └── page.js           # Stats page for /:code
-│   ├── [code]/
-│   │   └── route.js              # Redirect handler GET /:code
-│   ├── page.js                   # Dashboard (homepage)
-│   ├── layout.js                 # Root layout
-│   └── globals.css               # Global styles with Tailwind
-├── components/
-│   ├── LinkForm.js               # Form to create links
-│   ├── LinksTable.js             # Table to display all links
-│   └── Header.js                 # Navigation header
-├── lib/
-│   ├── db.js                     # Database connection pool
-│   └── utils.js                  # Helper functions
-├── .env.local                    # Local environment variables
-├── .env.example                  # Example environment variables
+│   │   │       └── page.tsx          # Stats page for /code/:code
+│   │   ├── [code]/
+│   │   │   └── route.ts              # Redirect handler GET /:code
+│   │   ├── page.tsx                  # Dashboard (homepage)
+│   │   ├── layout.tsx                # Root layout with theme
+│   │   ├── globals.css               # Global styles + glassmorphism
+│   │   └── favicon.ico               # App icon
+│   ├── components/
+│   │   ├── LinkForm.tsx              # Form to create links
+│   │   ├── LinksTable.tsx            # Table to display all links
+│   │   ├── Navigation.tsx            # Navigation header
+│   │   ├── ThemeProvider.tsx         # Theme context provider
+│   │   ├── ThemeToggle.tsx           # Theme switcher button
+│   │   ├── AmbientBackground.tsx     # Animated gradient blobs
+│   │   └── Logo.tsx                  # SVG logo component
+│   └── lib/
+│       ├── db.ts                     # Database connection pool
+│       ├── utils.ts                  # Helper functions
+│       └── types.ts                  # TypeScript type definitions
+├── database/
+│   └── schema.sql                    # Database schema
+├── docs/                             # Documentation
+├── scripts/
+│   ├── init-db.js                    # Database initialization
+│   └── test-connection.js            # Connection test
+├── .env.local                        # Local environment variables
+├── .env.example                      # Example environment variables
 ├── .gitignore
-├── next.config.js
+├── next.config.ts
 ├── package.json
 ├── README.md
-└── tailwind.config.js
+├── tsconfig.json
+└── postcss.config.mjs
 ```
 
 ---
 
 ## Database Connection
 
-### lib/db.js
+### src/lib/db.ts
 
-```javascript
+```typescript
 import { Pool } from 'pg';
 
 const pool = new Pool({
@@ -134,7 +149,7 @@ pool.on('connect', () => {
   console.log('✓ Connected to PostgreSQL database');
 });
 
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
   console.error('Database connection error:', err);
   process.exit(-1);
 });
@@ -146,15 +161,13 @@ export default pool;
 
 ## Utility Functions
 
-### lib/utils.js
+### src/lib/utils.ts
 
-```javascript
+```typescript
 /**
  * Generate a random alphanumeric code
- * @param {number} length - Length of code (default: 6)
- * @returns {string} Random code
  */
-export function generateRandomCode(length = 6) {
+export function generateRandomCode(length: number = 6): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let code = '';
   for (let i = 0; i < length; i++) {
@@ -165,20 +178,16 @@ export function generateRandomCode(length = 6) {
 
 /**
  * Validate custom code format
- * @param {string} code - Code to validate
- * @returns {boolean} True if valid
  */
-export function validateCode(code) {
+export function validateCode(code: string): boolean {
   const regex = /^[A-Za-z0-9]{6,8}$/;
   return regex.test(code);
 }
 
 /**
  * Validate URL format
- * @param {string} url - URL to validate
- * @returns {boolean} True if valid HTTP/HTTPS URL
  */
-export function validateUrl(url) {
+export function validateUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
@@ -189,22 +198,51 @@ export function validateUrl(url) {
 
 /**
  * Truncate long URLs for display
- * @param {string} url - URL to truncate
- * @param {number} maxLength - Maximum length
- * @returns {string} Truncated URL
  */
-export function truncateUrl(url, maxLength = 50) {
+export function truncateUrl(url: string, maxLength: number = 50): string {
   return url.length > maxLength ? url.substring(0, maxLength) + '...' : url;
 }
 
 /**
  * Format date for display
- * @param {string} dateString - ISO date string
- * @returns {string} Formatted date
  */
-export function formatDate(dateString) {
+export function formatDate(dateString: string | null): string {
   if (!dateString) return 'Never';
   return new Date(dateString).toLocaleString();
+}
+```
+
+### src/lib/types.ts
+
+```typescript
+export interface Link {
+  id: number;
+  code: string;
+  url: string;
+  clicks: number;
+  last_clicked: string | null;
+  created_at: string;
+}
+
+export interface CreateLinkRequest {
+  url: string;
+  customCode?: string;
+}
+
+export interface CreateLinkResponse {
+  code: string;
+  url: string;
+  shortUrl: string;
+  clicks: number;
+  createdAt: string;
+}
+
+export interface LinksResponse {
+  links: Link[];
+}
+
+export interface ErrorResponse {
+  error: string;
 }
 ```
 
@@ -484,42 +522,48 @@ export async function GET(request, { params }) {
 
 ## Frontend Components
 
-### 1. Root Layout
+### 1. Root Layout with Theme Support
 
-`app/layout.js`
+`src/app/layout.tsx`
 
-```javascript
+```typescript
+'use client';
+
 import { Inter } from 'next/font/google';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import AmbientBackground from '@/components/AmbientBackground';
+import Navigation from '@/components/Navigation';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata = {
-  title: 'TinyLink - URL Shortener',
-  description: 'Shorten URLs and track click statistics',
-};
-
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <title>TinyLink - URL Shortener</title>
+        <meta name="description" content="Shorten URLs and track click statistics" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body className={inter.className}>
-        <nav className="bg-blue-600 text-white shadow-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <a href="/" className="text-2xl font-bold hover:text-blue-100 transition">
-                🔗 TinyLink
-              </a>
-              <a 
-                href="/api/healthz" 
-                target="_blank"
-                className="text-sm hover:text-blue-100 transition"
-              >
-                Status
-              </a>
-            </div>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AmbientBackground />
+          <div className="relative min-h-screen flex flex-col">
+            {/* Global Navigation */}
+            <header className="sticky top-0 z-50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <Navigation />
+              </div>
+            </header>
+            
+            {/* Page Content */}
+            {children}
           </div>
-        </nav>
-        {children}
+        </ThemeProvider>
       </body>
     </html>
   );

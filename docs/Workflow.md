@@ -9,28 +9,30 @@
 npx create-next-app@latest tinylink
 
 # When prompted:
-# ✓ TypeScript? → Yes (recommended)
+# ✓ TypeScript? → Yes
 # ✓ ESLint? → Yes  
 # ✓ Tailwind CSS? → Yes
-# ✓ src/ directory? → No
+# ✓ src/ directory? → Yes
 # ✓ App Router? → Yes
-# ✓ Customize import alias? → No
+# ✓ Customize import alias? → No (@/ for src/)
 
 cd tinylink
 
-# Install PostgreSQL client
-npm install pg
+# Install dependencies
+npm install pg dotenv
+npm install -D @types/pg
 
 # Initialize Git (if not already done)
 git init
 ```
 
 **Checklist:**
-- [ ] Next.js project created
-- [ ] Tailwind CSS configured
+- [ ] Next.js project created with TypeScript
+- [ ] Tailwind CSS 4 configured
+- [ ] src/ directory structure created
 - [ ] Git repository initialized
 - [ ] `.gitignore` includes `.env*.local`
-- [ ] PostgreSQL package installed
+- [ ] PostgreSQL packages installed (pg, @types/pg)
 
 ### Step 1.2: Database Setup (Neon)
 
@@ -87,41 +89,58 @@ git init
 Create the folder structure:
 
 ```bash
-mkdir -p lib components app/api/links/[code] app/api/healthz app/code/[code] app/[code]
+# Windows (cmd)
+mkdir src\lib src\components src\app\api\links\[code] src\app\api\healthz src\app\code\[code] src\app\[code] database scripts docs
+
+# Or use PowerShell/bash
+mkdir -p src/lib src/components src/app/api/links/[code] src/app/api/healthz src/app/code/[code] src/app/[code] database scripts docs
 ```
 
 Your structure should look like:
 ```
 tinylink/
-├── app/
-│   ├── api/
-│   │   ├── links/
-│   │   │   ├── route.js
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── links/
+│   │   │   │   ├── route.ts
+│   │   │   │   └── [code]/
+│   │   │   │       └── route.ts
+│   │   │   └── healthz/
+│   │   │       └── route.ts
+│   │   ├── code/
 │   │   │   └── [code]/
-│   │   │       └── route.js
-│   │   └── healthz/
-│   │       └── route.js
-│   ├── code/
-│   │   └── [code]/
-│   │       └── page.js
-│   ├── [code]/
-│   │   └── route.js
-│   ├── page.js
-│   ├── layout.js
-│   └── globals.css
-├── components/
-│   ├── LinkForm.js
-│   ├── LinksTable.js
-│   └── Header.js
-├── lib/
-│   ├── db.js
-│   └── utils.js
+│   │   │       └── page.tsx
+│   │   ├── [code]/
+│   │   │   └── route.ts
+│   │   ├── page.tsx
+│   │   ├── layout.tsx
+│   │   └── globals.css
+│   ├── components/
+│   │   ├── LinkForm.tsx
+│   │   ├── LinksTable.tsx
+│   │   ├── Navigation.tsx
+│   │   ├── ThemeProvider.tsx
+│   │   ├── ThemeToggle.tsx
+│   │   ├── AmbientBackground.tsx
+│   │   └── Logo.tsx
+│   └── lib/
+│       ├── db.ts
+│       ├── utils.ts
+│       └── types.ts
+├── database/
+│   └── schema.sql
+├── scripts/
+│   ├── init-db.js
+│   └── test-connection.js
+├── docs/
 └── public/
 ```
 
 **Checklist:**
-- [ ] Folders created
+- [ ] Folders created in src/ directory
 - [ ] Structure matches Next.js App Router conventions
+- [ ] TypeScript files (.ts/.tsx) ready
 - [ ] Ready for implementation
 
 ---
@@ -130,8 +149,8 @@ tinylink/
 
 ### Step 2.1: Database Connection
 
-Create `lib/db.js`:
-```javascript
+Create `src/lib/db.ts`:
+```typescript
 import { Pool } from 'pg';
 
 const pool = new Pool({
@@ -146,7 +165,7 @@ pool.on('connect', () => {
   console.log('✓ Connected to database');
 });
 
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
   console.error('Database error:', err);
   process.exit(-1);
 });
@@ -156,14 +175,21 @@ export default pool;
 
 **Test Connection:**
 
-Create a test file `test-db.js`:
+Create `scripts/test-connection.js`:
 ```javascript
-import pool from './lib/db.js';
+require('dotenv').config({ path: '.env.local' });
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 (async () => {
   try {
     const result = await pool.query('SELECT NOW()');
     console.log('✓ Database connected:', result.rows[0]);
+    await pool.end();
     process.exit(0);
   } catch (err) {
     console.error('✗ Database connection failed:', err);
@@ -172,7 +198,7 @@ import pool from './lib/db.js';
 })();
 ```
 
-Run: `node test-db.js`
+Run: `node scripts/test-connection.js`
 
 **Checklist:**
 - [ ] Database connection file created
@@ -180,11 +206,36 @@ Run: `node test-db.js`
 - [ ] Test connection successful
 - [ ] Error handling added
 
-### Step 2.2: Utility Functions
+### Step 2.2: Utility Functions and Types
 
-Create `lib/utils.js`:
-```javascript
-export function generateRandomCode(length = 6) {
+Create `src/lib/types.ts`:
+```typescript
+export interface Link {
+  id: number;
+  code: string;
+  url: string;
+  clicks: number;
+  last_clicked: string | null;
+  created_at: string;
+}
+
+export interface CreateLinkRequest {
+  url: string;
+  customCode?: string;
+}
+
+export interface CreateLinkResponse {
+  code: string;
+  url: string;
+  shortUrl: string;
+  clicks: number;
+  createdAt: string;
+}
+```
+
+Create `src/lib/utils.ts`:
+```typescript
+export function generateRandomCode(length: number = 6): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let code = '';
   for (let i = 0; i < length; i++) {
@@ -193,11 +244,11 @@ export function generateRandomCode(length = 6) {
   return code;
 }
 
-export function validateCode(code) {
+export function validateCode(code: string): boolean {
   return /^[A-Za-z0-9]{6,8}$/.test(code);
 }
 
-export function validateUrl(url) {
+export function validateUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return ['http:', 'https:'].includes(parsed.protocol);
@@ -206,24 +257,14 @@ export function validateUrl(url) {
   }
 }
 
-export function truncateUrl(url, maxLength = 50) {
+export function truncateUrl(url: string, maxLength: number = 50): string {
   return url.length > maxLength ? url.substring(0, maxLength) + '...' : url;
 }
 
-export function formatDate(dateString) {
+export function formatDate(dateString: string | null): string {
   if (!dateString) return 'Never';
   return new Date(dateString).toLocaleString();
 }
-```
-
-**Test Utilities:**
-```javascript
-// In browser console or Node
-console.log(generateRandomCode()); // "aB3xY9"
-console.log(validateCode("abc123")); // true
-console.log(validateCode("ab")); // false (too short)
-console.log(validateUrl("https://example.com")); // true
-console.log(validateUrl("not-a-url")); // false
 ```
 
 **Checklist:**
