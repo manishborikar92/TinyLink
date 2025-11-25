@@ -193,11 +193,11 @@ export default function LinksTable({ links, onLinkDeleted, onRefresh }: LinksTab
         <>
           {/* Desktop Table View (hidden on mobile) */}
           <div className="hidden md:block overflow-x-auto">
-            <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-              <thead className="bg-zinc-50/50 dark:bg-zinc-900/50">
+            <table className="min-w-full divide-y divide-zinc-200/50 dark:divide-zinc-700">
+              <thead className="backdrop-blur-sm">
                 <tr>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider cursor-pointer hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 select-none transition-colors"
+                    className="px-6 py-3 text-left text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100/30 dark:hover:bg-zinc-800/30 select-none transition-colors"
                     onClick={() => handleSort('code')}
                     role="button"
                     tabIndex={0}
@@ -208,11 +208,11 @@ export default function LinksTable({ links, onLinkDeleted, onRefresh }: LinksTab
                       <SortIcon field="code" />
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
                     Original URL
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider cursor-pointer hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 select-none transition-colors"
+                    className="px-6 py-3 text-left text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100/30 dark:hover:bg-zinc-800/30 select-none transition-colors"
                     onClick={() => handleSort('clicks')}
                     role="button"
                     tabIndex={0}
@@ -224,7 +224,7 @@ export default function LinksTable({ links, onLinkDeleted, onRefresh }: LinksTab
                     </div>
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider cursor-pointer hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 select-none transition-colors"
+                    className="px-6 py-3 text-left text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:bg-zinc-100/30 dark:hover:bg-zinc-800/30 select-none transition-colors"
                     onClick={() => handleSort('created_at')}
                     role="button"
                     tabIndex={0}
@@ -235,14 +235,14 @@ export default function LinksTable({ links, onLinkDeleted, onRefresh }: LinksTab
                       <SortIcon field="created_at" />
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-700">
+              <tbody className="divide-y divide-zinc-200/50 dark:divide-zinc-700">
                 {filteredAndSortedLinks.map((link) => (
-                  <tr key={link.code} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                  <tr key={link.code} className="hover:bg-zinc-50/30 dark:hover:bg-zinc-800/30 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <a
                         href={`/code/${link.code}`}
