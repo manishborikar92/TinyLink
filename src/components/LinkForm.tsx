@@ -49,12 +49,18 @@ export default function LinkForm({ onLinkCreated }: LinkFormProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Create Short Link</h2>
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
+      <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
+        Create Short Link
+      </h2>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+        {/* URL Input */}
         <div>
-          <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
+          <label 
+            htmlFor="url" 
+            className="block text-sm sm:text-base font-medium text-gray-700 mb-2"
+          >
             Original URL *
           </label>
           <input
@@ -65,12 +71,18 @@ export default function LinkForm({ onLinkCreated }: LinkFormProps) {
             placeholder="https://example.com/very/long/url"
             required
             disabled={loading}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+            aria-required="true"
+            aria-invalid={error ? 'true' : 'false'}
           />
         </div>
 
+        {/* Custom Code Input */}
         <div>
-          <label htmlFor="customCode" className="block text-sm font-medium text-gray-700 mb-1">
+          <label 
+            htmlFor="customCode" 
+            className="block text-sm sm:text-base font-medium text-gray-700 mb-2"
+          >
             Custom Code (optional)
           </label>
           <input
@@ -81,33 +93,49 @@ export default function LinkForm({ onLinkCreated }: LinkFormProps) {
             placeholder="mycode (6-8 alphanumeric)"
             pattern="[A-Za-z0-9]{6,8}"
             disabled={loading}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+            aria-describedby="customCode-help"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p id="customCode-help" className="mt-2 text-xs sm:text-sm text-gray-500">
             Leave empty to generate a random code
           </p>
         </div>
 
+        {/* Error Message */}
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-700">{error}</p>
+          <div 
+            className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg"
+            role="alert"
+            aria-live="polite"
+          >
+            <p className="text-sm sm:text-base text-red-700">{error}</p>
           </div>
         )}
 
+        {/* Success Message */}
         {success && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-700">✓ {success}</p>
+          <div 
+            className="p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg"
+            role="status"
+            aria-live="polite"
+          >
+            <p className="text-sm sm:text-base text-green-700">✓ {success}</p>
           </div>
         )}
 
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="w-full px-6 py-3 sm:py-4 text-base sm:text-lg bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors min-h-[48px]"
+          aria-busy={loading}
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+              <span 
+                className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"
+                aria-hidden="true"
+              ></span>
               Creating...
             </span>
           ) : (

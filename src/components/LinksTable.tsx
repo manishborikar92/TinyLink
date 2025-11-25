@@ -118,160 +118,237 @@ export default function LinksTable({ links, onLinkDeleted, onRefresh }: LinksTab
 
   if (links.length === 0) {
     return (
-      <div className="mt-8 bg-white rounded-lg shadow-md p-12 text-center">
+      <div className="mt-6 sm:mt-8 bg-white rounded-lg shadow-md p-8 sm:p-12 text-center">
         <div className="text-gray-400 mb-4">
-          <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No links yet</h3>
-        <p className="text-gray-600">Create your first short link to get started!</p>
+        <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No links yet</h3>
+        <p className="text-sm sm:text-base text-gray-600">Create your first short link to get started!</p>
       </div>
     );
   }
 
   return (
-    <div className="mt-8 bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-lg font-semibold text-gray-900">Your Links</h2>
-          <div className="flex items-center gap-3">
+    <div className="mt-6 sm:mt-8 bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Header with Search and Refresh */}
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">Your Links</h2>
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="relative flex-1 sm:flex-initial">
               <input
                 type="text"
-                placeholder="Search by code or URL..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full sm:w-64 px-4 py-2 pl-10 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                aria-label="Search by code or URL"
               />
               <svg
                 className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
+                aria-hidden="true"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
             <button
               onClick={onRefresh}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
+              className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap px-2 py-2 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+              aria-label="Refresh links"
             >
               Refresh
             </button>
           </div>
         </div>
         {searchQuery && (
-          <div className="mt-3 text-sm text-gray-600">
+          <div className="mt-3 text-xs sm:text-sm text-gray-600">
             Found {filteredAndSortedLinks.length} of {links.length} links
           </div>
         )}
       </div>
       
+      {/* No Results State */}
       {filteredAndSortedLinks.length === 0 ? (
-        <div className="p-12 text-center">
+        <div className="p-8 sm:p-12 text-center">
           <div className="text-gray-400 mb-4">
-            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No results found</h3>
-          <p className="text-gray-600">Try adjusting your search query</p>
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No results found</h3>
+          <p className="text-sm sm:text-base text-gray-600">Try adjusting your search query</p>
           <button
             onClick={() => setSearchQuery('')}
-            className="mt-4 text-blue-600 hover:text-blue-700 font-medium text-sm"
+            className="mt-4 text-blue-600 hover:text-blue-700 font-medium text-sm sm:text-base min-h-[44px] px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
           >
             Clear search
           </button>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                  onClick={() => handleSort('code')}
-                >
-                  <div className="flex items-center gap-2">
-                    Code
-                    <SortIcon field="code" />
-                  </div>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Original URL
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                  onClick={() => handleSort('clicks')}
-                >
-                  <div className="flex items-center gap-2">
-                    Clicks
-                    <SortIcon field="clicks" />
-                  </div>
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                  onClick={() => handleSort('created_at')}
-                >
-                  <div className="flex items-center gap-2">
-                    Created
-                    <SortIcon field="created_at" />
-                  </div>
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredAndSortedLinks.map((link) => (
-              <tr key={link.code} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <a
-                    href={`/code/${link.code}`}
-                    className="text-blue-600 hover:text-blue-800 font-mono font-medium"
+        <>
+          {/* Desktop Table View (hidden on mobile) */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => handleSort('code')}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSort('code')}
                   >
-                    {link.code}
-                  </a>
-                </td>
-                <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      Code
+                      <SortIcon field="code" />
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Original URL
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => handleSort('clicks')}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSort('clicks')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Clicks
+                      <SortIcon field="clicks" />
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => handleSort('created_at')}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSort('created_at')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Created
+                      <SortIcon field="created_at" />
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredAndSortedLinks.map((link) => (
+                  <tr key={link.code} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <a
+                        href={`/code/${link.code}`}
+                        className="text-blue-600 hover:text-blue-800 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                      >
+                        {link.code}
+                      </a>
+                    </td>
+                    <td className="px-6 py-4">
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-900 hover:text-blue-600 break-all focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                        title={link.url}
+                      >
+                        {truncateUrl(link.url, 60)}
+                      </a>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {link.clicks}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(link.created_at)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                      <button
+                        onClick={() => handleCopy(link.code)}
+                        className="text-blue-600 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+                        aria-label={`Copy short link for ${link.code}`}
+                      >
+                        {copiedCode === link.code ? '✓ Copied' : 'Copy'}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(link.code)}
+                        disabled={deletingCode === link.code}
+                        className="text-red-600 hover:text-red-900 disabled:text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 rounded px-2 py-1"
+                        aria-label={`Delete link ${link.code}`}
+                      >
+                        {deletingCode === link.code ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View (visible only on mobile) */}
+          <div className="md:hidden divide-y divide-gray-200">
+            {filteredAndSortedLinks.map((link) => (
+              <div key={link.code} className="p-4 hover:bg-gray-50">
+                {/* Code and Clicks Row */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <a
+                      href={`/code/${link.code}`}
+                      className="text-blue-600 hover:text-blue-800 font-mono font-semibold text-base focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                    >
+                      {link.code}
+                    </a>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {formatDate(link.created_at)}
+                    </div>
+                  </div>
+                  <div className="text-right ml-4">
+                    <div className="text-lg font-semibold text-gray-900">{link.clicks}</div>
+                    <div className="text-xs text-gray-500">clicks</div>
+                  </div>
+                </div>
+
+                {/* URL */}
+                <div className="mb-3">
                   <a
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-900 hover:text-blue-600 break-all"
+                    className="text-sm text-gray-700 hover:text-blue-600 break-all line-clamp-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                     title={link.url}
                   >
-                    {truncateUrl(link.url, 60)}
+                    {truncateUrl(link.url, 80)}
                   </a>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {link.clicks}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDate(link.created_at)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
                   <button
                     onClick={() => handleCopy(link.code)}
-                    className="text-blue-600 hover:text-blue-900"
+                    className="flex-1 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] transition-colors"
+                    aria-label={`Copy short link for ${link.code}`}
                   >
-                    {copiedCode === link.code ? '✓ Copied' : 'Copy'}
+                    {copiedCode === link.code ? '✓ Copied' : 'Copy Link'}
                   </button>
                   <button
                     onClick={() => handleDelete(link.code)}
                     disabled={deletingCode === link.code}
-                    className="text-red-600 hover:text-red-900 disabled:text-gray-400"
+                    className="flex-1 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-gray-100 disabled:text-gray-400 min-h-[44px] transition-colors"
+                    aria-label={`Delete link ${link.code}`}
                   >
                     {deletingCode === link.code ? 'Deleting...' : 'Delete'}
                   </button>
-                </td>
-              </tr>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        </>
       )}
     </div>
   );
