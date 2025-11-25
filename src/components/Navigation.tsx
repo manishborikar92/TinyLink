@@ -3,7 +3,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Navigation() {
   return (
-    <div className="sticky top-4 z-50 px-4 sm:px-6 lg:px-34">
+    <div className="sticky top-4 z-50 px-4 sm:px-6 lg:px-8">
       <nav className="mx-auto max-w-7xl glass-panel rounded-2xl">
         <div className="px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
