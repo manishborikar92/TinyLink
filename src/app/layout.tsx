@@ -3,7 +3,6 @@
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import AmbientBackground from '@/components/AmbientBackground';
-import Navigation from '@/components/Navigation';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -24,7 +23,6 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AmbientBackground />
           <div className="relative min-h-screen flex flex-col">
-            <Navigation />
             {children}
           </div>
         </ThemeProvider>

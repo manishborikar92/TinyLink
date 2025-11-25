@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Navigation from '@/components/Navigation';
 import LinkForm from '@/components/LinkForm';
 import LinksTable from '@/components/LinksTable';
 import type { Link, CreateLinkResponse } from '@/lib/types';
@@ -44,9 +45,14 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-      {/* Header */}
-      <div className="mb-6 sm:mb-8">
+    <>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+        
+        {/* Navigation Bar - Mobile and Desktop  */}
+        <Navigation />
+
+        {/* Header */}
+        <div className="my-6 sm:my-8">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
           URL Shortener Dashboard
         </h1>
@@ -78,6 +84,7 @@ export default function Dashboard() {
           onRefresh={fetchLinks}
         />
       )}
-    </main>
+      </main>
+    </>
   );
 }
